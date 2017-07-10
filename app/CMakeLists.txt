@@ -10,14 +10,81 @@ cmake_minimum_required(VERSION 3.4.1)
 # You can define multiple libraries, and CMake builds them for you.
 # Gradle automatically packages shared libraries with your APK.
 
-add_library( # Sets the name of the library.
-             native-lib
+set(GUETZLI_ROOT
+        src/main/cpp/guetzli
+)
 
-             # Sets the library as a shared library.
-             SHARED
+include_directories(AFTER
+        ${GUETZLI_ROOT}
+        ${GUETZLI_ROOT}/third_party/butteraugli
+)
 
-             # Provides a relative path to your source file(s).
-             src/main/cpp/native-lib.cpp )
+set(GUETZLI_SRC
+	${GUETZLI_ROOT}/guetzli/butteraugli_comparator.cc
+	${GUETZLI_ROOT}/guetzli/dct_double.cc
+	${GUETZLI_ROOT}/guetzli/debug_print.cc
+	${GUETZLI_ROOT}/guetzli/entropy_encode.cc
+	${GUETZLI_ROOT}/guetzli/fdct.cc
+	${GUETZLI_ROOT}/guetzli/gamma_correct.cc
+	${GUETZLI_ROOT}/guetzli/guetzli.cc
+	${GUETZLI_ROOT}/guetzli/idct.cc
+	${GUETZLI_ROOT}/guetzli/jpeg_data.cc
+	${GUETZLI_ROOT}/guetzli/jpeg_data_decoder.cc
+	${GUETZLI_ROOT}/guetzli/jpeg_data_encoder.cc
+	${GUETZLI_ROOT}/guetzli/jpeg_data_reader.cc
+	${GUETZLI_ROOT}/guetzli/jpeg_data_writer.cc
+	${GUETZLI_ROOT}/guetzli/jpeg_huffman_decode.cc
+	${GUETZLI_ROOT}/guetzli/output_image.cc
+	${GUETZLI_ROOT}/guetzli/preprocess_downsample.cc
+	${GUETZLI_ROOT}/guetzli/processor.cc
+	${GUETZLI_ROOT}/guetzli/quality.cc
+	${GUETZLI_ROOT}/guetzli/quantize.cc
+	${GUETZLI_ROOT}/guetzli/score.cc
+
+	${GUETZLI_ROOT}/third_party/butteraugli/butteraugli/butteraugli.cc
+)
+
+add_library(guetzli
+        STATIC
+        ${GUETZLI_SRC}
+)
+
+set(PNG_ROOT
+        ${GUETZLI_ROOT}/third_party/png
+)
+
+include_directories(AFTER
+        ${PNG_ROOT}
+)
+
+set(PNG_SRC
+    ${PNG_ROOT}/pngget.c
+    ${PNG_ROOT}/pngread.c
+    ${PNG_ROOT}/pngrutil.c
+    ${PNG_ROOT}/pngtrans.c
+    ${PNG_ROOT}/pngwtran.c
+    ${PNG_ROOT}/png.c
+    ${PNG_ROOT}/pngmem.c
+    ${PNG_ROOT}/pngrio.c
+    ${PNG_ROOT}/pngset.c
+    ${PNG_ROOT}/pngwio.c
+    ${PNG_ROOT}/pngwutil.c
+    ${PNG_ROOT}/pngerror.c
+    ${PNG_ROOT}/pngpread.c
+    ${PNG_ROOT}/pngrtran.c
+    ${PNG_ROOT}/pngwrite.c
+)
+
+add_library(png
+        STATIC
+        ${PNG_SRC}
+)
+
+add_library(native-lib
+        SHARED
+        src/main/cpp/native-lib.cpp
+)
+
 
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because CMake includes system libraries in the search path by
@@ -37,8 +104,13 @@ find_library( # Sets the name of the path variable.
 # build script, prebuilt third-party libraries, or system libraries.
 
 target_link_libraries( # Specifies the target library.
-                       native-lib
+                        native-lib
 
-                       # Links the target library to the log library
-                       # included in the NDK.
-                       ${log-lib} )
+                        guetzli
+
+                        # Links the target library to the log library
+                        # included in the NDK.
+                        ${log-lib}
+
+                        png
+                        z)
