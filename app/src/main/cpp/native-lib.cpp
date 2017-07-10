@@ -1,11 +1,17 @@
 #include <jni.h>
-#include <string>
+#include "guetzli/guetzli/guetzli.cc"
 
 extern "C"
-JNIEXPORT jstring JNICALL
-Java_com_ploarxiong_guetzli_MainActivity_stringFromJNI(
-        JNIEnv *env,
-        jobject /* this */) {
-    std::string hello = "Hello from C++";
-    return env->NewStringUTF(hello.c_str());
+JNIEXPORT jint JNICALL
+Java_com_ploarxiong_guetzli_MainActivity_compressImage(JNIEnv *env, jobject instance,
+                                                       jstring inputImagePath_,
+                                                       jstring outputImagePath_) {
+    const char *inputImagePath = env->GetStringUTFChars(inputImagePath_, 0);
+    const char *outputImagePath = env->GetStringUTFChars(outputImagePath_, 0);
+
+    compressImage(inputImagePath, outputImagePath);
+
+    env->ReleaseStringUTFChars(inputImagePath_, inputImagePath);
+    env->ReleaseStringUTFChars(outputImagePath_, outputImagePath);
+    return 0;
 }

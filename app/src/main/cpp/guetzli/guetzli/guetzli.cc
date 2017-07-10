@@ -229,6 +229,72 @@ void Usage() {
 
 }  // namespace
 
+int compressImage(const char *input,const char *output){
+  std::set_terminate(TerminateHandler);
+
+  int verbose = 0;
+  int quality = kDefaultJPEGQuality;
+  int memlimit_mb = kDefaultMemlimitMB;
+
+
+  std::string in_data = ReadFileOrDie(input);
+  std::string out_data;
+
+  guetzli::Params params;
+  params.butteraugli_target = static_cast<float>(
+          guetzli::ButteraugliScoreForQuality(quality));
+
+  guetzli::ProcessStats stats;
+
+  if (verbose) {
+    stats.debug_output_file = stderr;
+  }
+
+  static const unsigned char kPNGMagicBytes[] = {
+          0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n',
+  };
+  if (in_data.size() >= 8 &&
+      memcmp(in_data.data(), kPNGMagicBytes, sizeof(kPNGMagicBytes)) == 0) {
+    int xsize, ysize;
+    std::vector<uint8_t> rgb;
+    if (!ReadPNG(in_data, &xsize, &ysize, &rgb)) {
+      fprintf(stderr, "Error reading PNG data from input file\n");
+      return 1;
+    }
+    double pixels = static_cast<double>(xsize) * ysize;
+    if (memlimit_mb != -1
+        && (pixels * kBytesPerPixel / (1 << 20) > memlimit_mb
+            || memlimit_mb < kLowestMemusageMB)) {
+      fprintf(stderr, "Memory limit would be exceeded. Failing.\n");
+      return 1;
+    }
+    if (!guetzli::Process(params, &stats, rgb, xsize, ysize, &out_data)) {
+      fprintf(stderr, "Guetzli processing failed\n");
+      return 1;
+    }
+  } else {
+    guetzli::JPEGData jpg_header;
+    if (!guetzli::ReadJpeg(in_data, guetzli::JPEG_READ_HEADER, &jpg_header)) {
+      fprintf(stderr, "Error reading JPG data from input file\n");
+      return 1;
+    }
+    double pixels = static_cast<double>(jpg_header.width) * jpg_header.height;
+    if (memlimit_mb != -1
+        && (pixels * kBytesPerPixel / (1 << 20) > memlimit_mb
+            || memlimit_mb < kLowestMemusageMB)) {
+      fprintf(stderr, "Memory limit would be exceeded. Failing.\n");
+      return 1;
+    }
+    if (!guetzli::Process(params, &stats, in_data, &out_data)) {
+      fprintf(stderr, "Guetzli processing failed\n");
+      return 1;
+    }
+  }
+
+  WriteFileOrDie(output, out_data);
+  return 0;
+}
+
 int main(int argc, char** argv) {
   std::set_terminate(TerminateHandler);
 
