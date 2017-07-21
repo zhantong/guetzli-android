@@ -28,6 +28,10 @@
 #include "guetzli/processor.h"
 #include "guetzli/quality.h"
 #include "guetzli/stats.h"
+#include "clguetzli/clguetzli.h"
+#ifdef __USE_GPERFTOOLS__
+#include <google/profiler.h>
+#endif
 
 namespace {
 
@@ -164,7 +168,9 @@ std::string ReadFileOrDie(const char* filename) {
   off_t buffer_size = 8192;
 
   if (fseek(f, 0, SEEK_END) == 0) {
-    buffer_size = std::max<off_t>(ftell(f), 1);
+//    buffer_size = std::max<off_t>(ftell(f), 1);
+	  long size = ftell(f);
+	  buffer_size = size > 0 ? size : 1;
     if (fseek(f, 0, SEEK_SET) != 0) {
       perror("fseek");
       exit(1);
@@ -223,79 +229,25 @@ void Usage() {
       "                 Default value is %d.\n"
       "  --memlimit M - Memory limit in MB. Guetzli will fail if unable to stay under\n"
       "                 the limit. Default limit is %d MB.\n"
+#ifdef __USE_OPENCL__
+	  "  --opencl     - Use OpenCL\n"
+      "  --checkcl    - Check OpenCL result\n"
+#endif
+	  "  --c          - Use c opt version\n"
+#ifdef __USE_CUDA__
+	  "  --cuda       - Use CUDA\n"	 
+      "  --checkcuda  - Check CUDA result\n"
+#endif
       "  --nomemlimit - Do not limit memory usage.\n", kDefaultJPEGQuality, kDefaultMemlimitMB);
   exit(1);
 }
 
 }  // namespace
 
-int compressImage(const char *input,const char *output){
-  std::set_terminate(TerminateHandler);
-
-  int verbose = 0;
-  int quality = kDefaultJPEGQuality;
-  int memlimit_mb = kDefaultMemlimitMB;
-
-
-  std::string in_data = ReadFileOrDie(input);
-  std::string out_data;
-
-  guetzli::Params params;
-  params.butteraugli_target = static_cast<float>(
-          guetzli::ButteraugliScoreForQuality(quality));
-
-  guetzli::ProcessStats stats;
-
-  if (verbose) {
-    stats.debug_output_file = stderr;
-  }
-
-  static const unsigned char kPNGMagicBytes[] = {
-          0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n',
-  };
-  if (in_data.size() >= 8 &&
-      memcmp(in_data.data(), kPNGMagicBytes, sizeof(kPNGMagicBytes)) == 0) {
-    int xsize, ysize;
-    std::vector<uint8_t> rgb;
-    if (!ReadPNG(in_data, &xsize, &ysize, &rgb)) {
-      fprintf(stderr, "Error reading PNG data from input file\n");
-      return 1;
-    }
-    double pixels = static_cast<double>(xsize) * ysize;
-    if (memlimit_mb != -1
-        && (pixels * kBytesPerPixel / (1 << 20) > memlimit_mb
-            || memlimit_mb < kLowestMemusageMB)) {
-      fprintf(stderr, "Memory limit would be exceeded. Failing.\n");
-      return 1;
-    }
-    if (!guetzli::Process(params, &stats, rgb, xsize, ysize, &out_data)) {
-      fprintf(stderr, "Guetzli processing failed\n");
-      return 1;
-    }
-  } else {
-    guetzli::JPEGData jpg_header;
-    if (!guetzli::ReadJpeg(in_data, guetzli::JPEG_READ_HEADER, &jpg_header)) {
-      fprintf(stderr, "Error reading JPG data from input file\n");
-      return 1;
-    }
-    double pixels = static_cast<double>(jpg_header.width) * jpg_header.height;
-    if (memlimit_mb != -1
-        && (pixels * kBytesPerPixel / (1 << 20) > memlimit_mb
-            || memlimit_mb < kLowestMemusageMB)) {
-      fprintf(stderr, "Memory limit would be exceeded. Failing.\n");
-      return 1;
-    }
-    if (!guetzli::Process(params, &stats, in_data, &out_data)) {
-      fprintf(stderr, "Guetzli processing failed\n");
-      return 1;
-    }
-  }
-
-  WriteFileOrDie(output, out_data);
-  return 0;
-}
-
 int main(int argc, char** argv) {
+#ifdef __USE_GPERFTOOLS__
+	ProfilerStart("guetzli.prof");
+#endif
   std::set_terminate(TerminateHandler);
 
   int verbose = 0;
@@ -320,7 +272,28 @@ int main(int argc, char** argv) {
       memlimit_mb = atoi(argv[opt_idx]);
     } else if (!strcmp(argv[opt_idx], "--nomemlimit")) {
       memlimit_mb = -1;
-    } else if (!strcmp(argv[opt_idx], "--")) {
+	}
+#ifdef __USE_OPENCL__
+	else if (!strcmp(argv[opt_idx], "--opencl")) {
+		g_mathMode = MODE_OPENCL;
+	}
+    else if (!strcmp(argv[opt_idx], "--checkcl")) {
+        g_mathMode = MODE_CHECKCL;
+    }
+#endif
+	else if (!strcmp(argv[opt_idx], "--c"))
+	{
+		g_mathMode = MODE_CPU_OPT;
+	}
+#ifdef __USE_CUDA__
+	else if (!strcmp(argv[opt_idx], "--cuda")) {
+		g_mathMode = MODE_CUDA;
+	}
+    else if (!strcmp(argv[opt_idx], "--checkcuda")) {
+        g_mathMode = MODE_CHECKCUDA;
+    }
+#endif
+	else if (!strcmp(argv[opt_idx], "--")) {
       opt_idx++;
       break;
     } else {
@@ -388,5 +361,8 @@ int main(int argc, char** argv) {
   }
 
   WriteFileOrDie(argv[opt_idx + 1], out_data);
+#ifdef __USE_GPERFTOOLS__
+  ProfilerStop();
+#endif
   return 0;
 }
