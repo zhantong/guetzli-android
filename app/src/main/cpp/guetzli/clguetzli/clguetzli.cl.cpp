@@ -8,7 +8,12 @@
 #include <algorithm>
 #include <stdint.h>
 #include <vector>
+#include "clguetzli.h"
+#include "clguetzli.cl"
 #include "utils.h"
+#define abs(exper)    fabs((exper))
+#define __checkcl
+
 
 #ifdef __USE_OPENCL__
 
@@ -31,12 +36,6 @@ void set_global_size(int dim, int size){
     g_sizevec[dim] = size;
 }
 
-#define __checkcl
-#define abs(exper)    fabs((exper))
-#include "clguetzli.h"
-#include "clguetzli.cl"
-#include "cuguetzli.h"
-#include "ocu.h"
 
 namespace guetzli
 {
@@ -151,63 +150,6 @@ namespace guetzli
 		}
     }
 
-    void ButteraugliComparatorEx::StartBlockComparisons()
-    {
-        if (MODE_CPU == g_mathMode)
-        {
-            ButteraugliComparator::StartBlockComparisons();
-            return;
-        }
-
-        std::vector<std::vector<float> > dummy(3);
-        ::butteraugli::Mask(rgb_orig_opsin, rgb_orig_opsin, width_, height_, &mask_xyz_, &dummy);
-
-        const int width = width_;
-        const int height = height_;
-        const int factor_x = 1;
-        const int factor_y = 1;
-
-        const int block_width = (width + 8 * factor_x - 1) / (8 * factor_x);
-        const int block_height = (height + 8 * factor_y - 1) / (8 * factor_y);
-        const int num_blocks = block_width * block_height;
-#ifdef __USE_DOUBLE_AS_FLOAT__
-        const float* lut = kSrgb8ToLinearTable;
-#else
-        const double* lut = kSrgb8ToLinearTable;
-#endif
-        imgOpsinDynamicsBlockList.resize(num_blocks * 3 * kDCTBlockSize);
-        imgMaskXyzScaleBlockList.resize(num_blocks * 3);
-        for (int block_y = 0, block_ix = 0; block_y < block_height; ++block_y)
-        {
-            for (int block_x = 0; block_x < block_width; ++block_x, ++block_ix)
-            {
-                float* curR = &imgOpsinDynamicsBlockList[block_ix * 3 * kDCTBlockSize];
-                float* curG = curR + kDCTBlockSize;
-                float* curB = curG + kDCTBlockSize;
-
-                for (int iy = 0, i = 0; iy < 8; ++iy) {
-                    for (int ix = 0; ix < 8; ++ix, ++i) {
-                        int x = std::min(8 * block_x + ix, width - 1);
-                        int y = std::min(8 * block_y + iy, height - 1);
-                        int px = y * width + x;
-
-                        curR[i] = lut[rgb_orig_[3 * px]];
-                        curG[i] = lut[rgb_orig_[3 * px + 1]];
-                        curB[i] = lut[rgb_orig_[3 * px + 2]];
-                    }
-                }
-
-                CalcOpsinDynamicsImage((float(*)[64])curR);
-
-                int xmin = block_x * 8;
-                int ymin = block_y * 8;
-
-                imgMaskXyzScaleBlockList[block_ix * 3] = mask_xyz_[0][ymin * width_ + xmin];
-                imgMaskXyzScaleBlockList[block_ix * 3 + 1] = mask_xyz_[1][ymin * width_ + xmin];
-                imgMaskXyzScaleBlockList[block_ix * 3 + 2] = mask_xyz_[2][ymin * width_ + xmin];
-            }
-        }
-    }
 
     void ButteraugliComparatorEx::FinishBlockComparisons() {
         ButteraugliComparator::FinishBlockComparisons();

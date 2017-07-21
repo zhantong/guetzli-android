@@ -21,6 +21,9 @@
 #define kBlockHalf      (kBlockEdge * kBlockEdgeHalf)
 #define kComputeBlockSize (kBlockSize * 3)
 
+#define max(a,b) (((a) > (b)) ? (a) : (b))
+#define min(a,b) (((a) < (b)) ? (a) : (b))
+
 // IntFloatPair: opencl version of output_order/input_order
 typedef struct __IntFloatPair
 {

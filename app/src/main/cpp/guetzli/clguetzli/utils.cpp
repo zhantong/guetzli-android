@@ -25,8 +25,7 @@
 #include <stdlib.h>
 #include <memory.h>
 #include <stdarg.h>
-#include "CL/cl.h"
-#include "CL/cl_ext.h"
+#include "include/libopencl.h"
 #include "utils.h"
 #include <assert.h>
 

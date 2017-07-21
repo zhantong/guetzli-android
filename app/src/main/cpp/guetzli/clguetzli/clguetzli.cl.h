@@ -12,8 +12,7 @@
 
 #ifdef __cplusplus
 #ifndef __CUDACC__
-#include "CL/cl.h"
-#include "cuda.h"
+#include "include/libopencl.h"
 #endif
 #endif
 
@@ -30,7 +29,6 @@
 
     typedef unsigned char uchar;
     typedef unsigned short ushort;
-    typedef CUdeviceptr cu_mem;
 
     int get_global_id(int dim);
     int get_global_size(int dim);
@@ -51,20 +49,6 @@
                 float *ch[3];
             };
         }ocl_channels;
-
-        typedef union ocu_channels_t
-        {
-            struct
-            {
-                float * r;
-                float * g;
-                float * b;
-            };
-            union
-            {
-                float *ch[3];
-            };
-        }ocu_channels;
     #else
         typedef union ocl_channels_t
         {
@@ -85,26 +69,6 @@
                 cl_mem ch[3];
             };
         }ocl_channels;
-
-        typedef union ocu_channels_t
-        {
-            struct
-            {
-                cu_mem r;
-                cu_mem g;
-                cu_mem b;
-            };
-            struct
-            {
-                cu_mem x;
-                cu_mem y;
-                cu_mem b_;
-            };
-            union
-            {
-                cu_mem ch[3];
-            };
-        }ocu_channels;
     #endif
 #endif /*__CUDACC__*/
 #endif /*__cplusplus*/

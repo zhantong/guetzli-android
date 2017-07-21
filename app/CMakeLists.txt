@@ -10,13 +10,16 @@ cmake_minimum_required(VERSION 3.4.1)
 # You can define multiple libraries, and CMake builds them for you.
 # Gradle automatically packages shared libraries with your APK.
 
+add_definitions(-D__USE_OPENCL__)
+
 set(GUETZLI_ROOT
         src/main/cpp/guetzli
 )
-
 include_directories(AFTER
         ${GUETZLI_ROOT}
         ${GUETZLI_ROOT}/third_party/butteraugli
+        ${GUETZLI_ROOT}/clguetzli
+        ${GUETZLI_ROOT}/clguetzli/include
 )
 
 set(GUETZLI_SRC
@@ -42,6 +45,23 @@ set(GUETZLI_SRC
 	${GUETZLI_ROOT}/guetzli/score.cc
 
 	${GUETZLI_ROOT}/third_party/butteraugli/butteraugli/butteraugli.cc
+
+	${GUETZLI_ROOT}/clguetzli/cl.hpp
+	${GUETZLI_ROOT}/clguetzli/clbutter_comparator.cpp
+	${GUETZLI_ROOT}/clguetzli/clbutter_comparator.h
+	${GUETZLI_ROOT}/clguetzli/clguetzli.cl
+	${GUETZLI_ROOT}/clguetzli/clguetzli.cl.cpp
+	${GUETZLI_ROOT}/clguetzli/clguetzli.cl.h
+	${GUETZLI_ROOT}/clguetzli/clguetzli.cpp
+	${GUETZLI_ROOT}/clguetzli/clguetzli.cu
+	${GUETZLI_ROOT}/clguetzli/clguetzli.h
+	${GUETZLI_ROOT}/clguetzli/clguetzli_test.cpp
+	${GUETZLI_ROOT}/clguetzli/clguetzli_test.h
+	${GUETZLI_ROOT}/clguetzli/ocl.cpp
+	${GUETZLI_ROOT}/clguetzli/ocl.h
+	${GUETZLI_ROOT}/clguetzli/utils.cpp
+	${GUETZLI_ROOT}/clguetzli/utils.h
+	${GUETZLI_ROOT}/clguetzli/libopencl.c
 )
 
 add_library(guetzli
@@ -58,21 +78,21 @@ include_directories(AFTER
 )
 
 set(PNG_SRC
-    ${PNG_ROOT}/pngget.c
-    ${PNG_ROOT}/pngread.c
-    ${PNG_ROOT}/pngrutil.c
-    ${PNG_ROOT}/pngtrans.c
-    ${PNG_ROOT}/pngwtran.c
     ${PNG_ROOT}/png.c
-    ${PNG_ROOT}/pngmem.c
-    ${PNG_ROOT}/pngrio.c
-    ${PNG_ROOT}/pngset.c
-    ${PNG_ROOT}/pngwio.c
-    ${PNG_ROOT}/pngwutil.c
     ${PNG_ROOT}/pngerror.c
+    ${PNG_ROOT}/pngget.c
+    ${PNG_ROOT}/pngmem.c
     ${PNG_ROOT}/pngpread.c
+    ${PNG_ROOT}/pngread.c
+    ${PNG_ROOT}/pngrio.c
     ${PNG_ROOT}/pngrtran.c
+    ${PNG_ROOT}/pngrutil.c
+    ${PNG_ROOT}/pngset.c
+    ${PNG_ROOT}/pngtrans.c
+    ${PNG_ROOT}/pngwio.c
     ${PNG_ROOT}/pngwrite.c
+    ${PNG_ROOT}/pngwtran.c
+    ${PNG_ROOT}/pngwutil.c
 )
 
 add_library(png
@@ -105,9 +125,7 @@ find_library( # Sets the name of the path variable.
 
 target_link_libraries( # Specifies the target library.
                         native-lib
-
                         guetzli
-
                         # Links the target library to the log library
                         # included in the NDK.
                         ${log-lib}

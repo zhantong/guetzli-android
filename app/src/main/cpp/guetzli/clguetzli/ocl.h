@@ -8,7 +8,7 @@
 
 #ifdef __USE_OPENCL__
 
-#include "CL/cl.h"
+#include "include/libopencl.h"
 #include "utils.h"
 #include "clguetzli.cl.h"
 

@@ -244,7 +244,7 @@ void Usage() {
 
 }  // namespace
 
-int main(int argc, char** argv) {
+int compressImage(const char *input,const char *output) {
 #ifdef __USE_GPERFTOOLS__
 	ProfilerStart("guetzli.prof");
 #endif
@@ -254,6 +254,8 @@ int main(int argc, char** argv) {
   int quality = kDefaultJPEGQuality;
   int memlimit_mb = kDefaultMemlimitMB;
 
+    g_mathMode = MODE_CPU_OPT;
+    /*
   int opt_idx = 1;
   for(;opt_idx < argc;opt_idx++) {
     if (strnlen(argv[opt_idx], 2) < 2 || argv[opt_idx][0] != '-' || argv[opt_idx][1] != '-')
@@ -305,8 +307,8 @@ int main(int argc, char** argv) {
   if (argc - opt_idx != 2) {
     Usage();
   }
-
-  std::string in_data = ReadFileOrDie(argv[opt_idx]);
+    */
+  std::string in_data = ReadFileOrDie(input);
   std::string out_data;
 
   guetzli::Params params;
@@ -360,7 +362,7 @@ int main(int argc, char** argv) {
     }
   }
 
-  WriteFileOrDie(argv[opt_idx + 1], out_data);
+  WriteFileOrDie(output, out_data);
 #ifdef __USE_GPERFTOOLS__
   ProfilerStop();
 #endif

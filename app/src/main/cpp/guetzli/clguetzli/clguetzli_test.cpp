@@ -7,7 +7,7 @@
 */
 #ifdef __USE_OPENCL__
 
-#include <CL/cl.h>
+#include "include/libopencl.h"
 #include <math.h>
 #include <assert.h>
 #include <vector>
