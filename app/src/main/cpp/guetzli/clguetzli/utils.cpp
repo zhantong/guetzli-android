@@ -28,6 +28,7 @@
 #include "include/libopencl.h"
 #include "utils.h"
 #include <assert.h>
+#include <android/log.h>
 
 
 //we want to use POSIX functions
@@ -42,7 +43,8 @@ void LogInfo(const char* str, ...)
         va_list args;
         va_start(args, str);
 
-        vfprintf(stdout, str, args);
+        __android_log_vprint(ANDROID_LOG_INFO,"Android JNI",str,args);
+        //vfprintf(stdout, str, args);
 
         va_end(args);
     }
@@ -55,7 +57,8 @@ void LogError(const char* str, ...)
         va_list args;
         va_start(args, str);
 
-        vfprintf(stderr, str, args);
+        __android_log_vprint(ANDROID_LOG_ERROR,"Android JNI",str,args);
+        //vfprintf(stderr, str, args);
 
         va_end(args);
     }

@@ -15,6 +15,7 @@
  */
 
 #include "guetzli/debug_print.h"
+#include <android/log.h>
 
 namespace guetzli {
 
@@ -23,7 +24,8 @@ void PrintDebug(ProcessStats* stats, std::string s) {
     stats->debug_output->append(s);
   }
   if (stats->debug_output_file) {
-    fprintf(stats->debug_output_file, "%s", s.c_str());
+      __android_log_print(ANDROID_LOG_DEBUG,"Android JNI","%s",s.c_str());
+    //fprintf(stats->debug_output_file, "%s", s.c_str());
   }
 }
 
