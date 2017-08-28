@@ -244,7 +244,26 @@ void Usage() {
 
 }  // namespace
 
-int compressImage(const char *input,const char *output) {
+MATH_MODE getMode(int mode){
+  switch (mode){
+    case 0:
+      return MODE_CPU;
+    case 1:
+      return MODE_CPU_OPT;
+    case 2:
+      return MODE_OPENCL;
+    case 3:
+      return MODE_CUDA;
+    case 4:
+      return MODE_CHECKCL;
+    case 5:
+      return MODE_CHECKCUDA;
+    default:
+      return MODE_CPU;
+  }
+}
+
+int compressImage(const char *input,const char *output, const int mode) {
 #ifdef __USE_GPERFTOOLS__
 	ProfilerStart("guetzli.prof");
 #endif
@@ -254,7 +273,7 @@ int compressImage(const char *input,const char *output) {
   int quality = kDefaultJPEGQuality;
   int memlimit_mb = kDefaultMemlimitMB;
 
-    g_mathMode = MODE_CPU_OPT;
+  g_mathMode = getMode(mode);
     /*
   int opt_idx = 1;
   for(;opt_idx < argc;opt_idx++) {

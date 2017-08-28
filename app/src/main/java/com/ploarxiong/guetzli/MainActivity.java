@@ -10,6 +10,13 @@ import android.widget.Button;
 import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
+    public static final int MODE_CPU = 0;
+    public static final int MODE_CPU_OPT = 1;
+    public static final int MODE_OPENCL = 2;
+    public static final int MODE_CUDA = 3;
+    public static final int MODE_CHECKCL = 4;
+    public static final int MODE_CHECKCUDA = 5;
+
     String imagePath;
     public static final int REQUEST_CODE_ORIGIN_IMAGE_PATH = 1;
 
@@ -52,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
             imagePath = "/storage/emulated/0/bees.png";
         }
         System.out.println("start");
-        compressImage(imagePath, imagePath + "1");
+        compressImage(imagePath, imagePath + "1", MODE_OPENCL);
         System.out.println("finish");
     }
 
@@ -72,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
      * A native method that is implemented by the 'native-lib' native library,
      * which is packaged with this application.
      */
-    public native int compressImage(String inputImagePath, String outputImagePath);
+    public native int compressImage(String inputImagePath, String outputImagePath, int mode);
 
     String contentUriToFileUri(Uri _uri) {
         String filePath;
